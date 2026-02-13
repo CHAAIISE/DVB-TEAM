@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SuiClient } from '@mysten/sui/client';
-import { supabase } from '@/app/lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID!;
 const SUI_NETWORK = process.env.NEXT_PUBLIC_SUI_NETWORK || 'testnet';
@@ -31,7 +31,12 @@ export async function POST(req: NextRequest) {
 
     // Query les nouveaux événements depuis Sui
     const events = await suiClient.queryEvents({
-      query: { Package: PACKAGE_ID },
+      query: { 
+        MoveEventModule: {
+          package: PACKAGE_ID,
+          module: 'dvb_team'
+        }
+      },
       limit: 100,
       order: 'ascending'
     });
