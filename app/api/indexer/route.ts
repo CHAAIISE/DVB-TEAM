@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { SuiClient } from '@mysten/sui.js/client';
+import { SuiClient } from '@mysten/sui/client';
 import { supabase } from '@/app/lib/supabase';
 
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID!;

@@ -53,7 +53,7 @@ INDEXER_SECRET=choisis-un-mot-de-passe-random-ici
 ## 5️⃣ Installe les dépendances
 
 ```bash
-pnpm add @supabase/supabase-js @mysten/sui.js
+pnpm add @supabase/supabase-js @mysten/sui
 ```
 
 ## 6️⃣ Deploy sur Vercel
