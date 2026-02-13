@@ -1,8 +1,21 @@
-/*
-/// Module: move
-module move::move;
-*/
+module DVB_TEAM::DVB_TEAM;
+use std::string::String;
 
-// For Move coding conventions, see
-// https://docs.sui.io/concepts/sui-move-concepts/conventions
 
+// Structs
+public struct User has key, store {
+    name: String,
+    friends: vector<address>,
+    publications: vector<Post>,
+}
+
+public struct Post has key, store{
+    title: String,
+    content: String,
+}
+
+public struct UserRegistery has key {
+    id: UID,
+    ids: vector<ID>,
+    counter: u64,
+}
