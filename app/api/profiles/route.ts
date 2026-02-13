@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/app/lib/supabase';
+import { supabase } from '../../lib/supabase';
 
 // GET /api/profiles - Liste tous les profils avec pagination
 export async function GET(req: NextRequest) {
