@@ -4,12 +4,14 @@ use std::string::String;
 
 // Structs
 public struct User has key, store {
+    id: UID,
     name: String,
     friends: vector<address>,
     publications: vector<Post>,
 }
 
 public struct Post has key, store{
+    id: UID,
     title: String,
     content: String,
 }
@@ -19,3 +21,4 @@ public struct UserRegistery has key {
     ids: vector<ID>,
     counter: u64,
 }
+
