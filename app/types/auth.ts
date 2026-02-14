@@ -1,6 +1,6 @@
 import { User } from './user';
 
-export type AuthMethod = 'wallet' | 'google' | 'apple' | 'facebook';
+export type AuthMethod = 'wallet' | 'google' | 'apple' | 'facebook' | 'oauth';
 
 export interface AuthState {
   isAuthenticated: boolean;

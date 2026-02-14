@@ -1,55 +1,80 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { useSubscribe, useSubscribedCreators } from "@/hooks/useContract";
+import { useUser } from "@/contexts/UserContext";
 
 interface FollowButtonProps {
-  userId: string;
+  /** The on-chain profile object ID of the creator to subscribe to */
+  creatorProfileId: string;
+  /** The wallet address of the creator */
+  creatorAddress?: string;
+  /** Subscription price in MIST (0 = free) */
   subscriptionPrice?: number;
-  isFollowing?: boolean;
   onFollowChange?: (isFollowing: boolean) => void;
 }
 
+function mistToSui(mist: number): string {
+  const sui = mist / 1_000_000_000;
+  return sui % 1 === 0 ? sui.toString() : sui.toFixed(2);
+}
+
 export function FollowButton({
-  userId,
-  subscriptionPrice,
-  isFollowing = false,
+  creatorProfileId,
+  creatorAddress,
+  subscriptionPrice = 0,
   onFollowChange,
 }: FollowButtonProps) {
-  const [following, setFollowing] = useState(isFollowing);
-  const [isLoading, setIsLoading] = useState(false);
+  const { profileId, hasProfile, walletAddress } = useUser();
+  const { subscribe, loading } = useSubscribe();
+  const { creators: subscribedCreators } = useSubscribedCreators();
+  const [subscribed, setSubscribed] = useState(false);
+
+  // Check if already subscribed by looking at SubscriptionReceipt objects
+  useEffect(() => {
+    if (creatorAddress && subscribedCreators.includes(creatorAddress)) {
+      setSubscribed(true);
+    }
+  }, [creatorAddress, subscribedCreators]);
 
   const handleClick = async () => {
-    setIsLoading(true);
+    if (!profileId || !hasProfile) {
+      alert("You need to create a profile first");
+      return;
+    }
+
+    if (subscribed) {
+      // Already subscribed — can't unsubscribe on-chain (no unsub function)
+      return;
+    }
+
     try {
-      // TODO: Implement follow/unfollow with blockchain payment if subscriptionPrice
-      await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate API call
-
-      const newFollowingState = !following;
-      setFollowing(newFollowingState);
-      onFollowChange?.(newFollowingState);
-
-      if (newFollowingState && subscriptionPrice) {
-        console.log(`Processing payment of ${subscriptionPrice} SUI for subscription`);
-      }
-    } finally {
-      setIsLoading(false);
+      await subscribe(creatorProfileId, profileId, subscriptionPrice);
+      setSubscribed(true);
+      onFollowChange?.(true);
+    } catch (error) {
+      console.error("Subscription failed:", error);
+      alert("Subscription failed. Check console for details.");
     }
   };
 
   return (
     <Button
       size="lg"
-      variant={following ? "secondary" : "default"}
+      variant={subscribed ? "secondary" : "default"}
       className="w-full flex flex-col items-center py-6 h-auto"
       onClick={handleClick}
-      disabled={isLoading}
+      disabled={loading || subscribed}
     >
       <span className="text-lg font-bold">
-        {following ? "Following" : "Follow"}
+        {loading ? "Processing..." : subscribed ? "Subscribed" : "Subscribe"}
       </span>
-      {subscriptionPrice && (
-        <span className="text-sm opacity-80">{subscriptionPrice} SUI</span>
+      {subscriptionPrice > 0 && (
+        <span className="text-sm opacity-80">{mistToSui(subscriptionPrice)} SUI</span>
+      )}
+      {subscriptionPrice === 0 && !subscribed && (
+        <span className="text-sm opacity-80">Free</span>
       )}
     </Button>
   );

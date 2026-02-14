@@ -10,280 +10,385 @@ import { SearchBar } from "@/components/search/SearchBar";
 import { NFTGrid } from "@/components/nft/NFTGrid";
 import { useUser } from "@/contexts/UserContext";
 import { useFavorites } from "@/contexts/FavoritesContext";
-import { mockListings } from "@/mock";
+import { useSellerListings, useListings } from "@/hooks/useContract";
 
 export default function MyProfilePage() {
-  const { currentUser, updateUsername, updateBio } = useUser();
+  const {
+    walletAddress,
+    displayName,
+    bio,
+    subscriptionPrice,
+    subscriberCount,
+    subscriptionCount,
+    listingCount,
+    hasProfile,
+    isLoading,
+    createProfile,
+    updateDisplayName,
+    updateBio,
+    setSubscriptionPrice,
+  } = useUser();
   const { favorites } = useFavorites();
+
+  const { listings: myListings, loading: listingsLoading } = useSellerListings(walletAddress || undefined);
+  const { listings: allListings } = useListings();
 
   const [isEditingUsername, setIsEditingUsername] = useState(false);
   const [isEditingBio, setIsEditingBio] = useState(false);
-  const [newUsername, setNewUsername] = useState(currentUser?.username || "");
-  const [newBio, setNewBio] = useState(currentUser?.bio || "");
+  const [isEditingPrice, setIsEditingPrice] = useState(false);
+  const [newUsername, setNewUsername] = useState(displayName);
+  const [newBio, setNewBio] = useState(bio);
+  const [newPrice, setNewPrice] = useState("");
   const [error, setError] = useState("");
   const [showFullUsername, setShowFullUsername] = useState(false);
 
-  // Mock stats - à remplacer par de vraies données plus tard
-  const stats = {
-    followers: 142,
-    following: 87,
-    currentListings: 0 // Will be calculated below
-  };
-
-  const handleSearch = (query: string) => {
-    console.log("Searching for:", query);
-    // TODO: Implement search functionality
-  };
-
-  if (!currentUser) {
+  if (!walletAddress) {
     return (
       <div className="container py-12 text-center">
-        <p className="text-muted-foreground">Chargement du profil...</p>
+        <p className="text-muted-foreground">Connect your wallet to view your profile</p>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="container py-12 text-center">
+        <p className="text-muted-foreground animate-pulse">Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!hasProfile) {
+    return (
+      <div className="container py-12 text-center space-y-4">
+        <h1 className="text-2xl font-bold">Welcome to Art-X</h1>
+        <p className="text-muted-foreground">Create your on-chain profile to get started</p>
+        <Button onClick={createProfile} disabled={isLoading}>
+          {isLoading ? "Creating..." : "Create Profile"}
+        </Button>
       </div>
     );
   }
 
   const handleSaveUsername = async () => {
-    if (newUsername.trim().length < 3) {
-      setError("Le username doit contenir au moins 3 caractères");
+    if (newUsername.trim().length < 1) {
+      setError("Display name cannot be empty");
       return;
     }
 
-    const success = await updateUsername(newUsername.trim());
+    const success = await updateDisplayName(newUsername.trim());
     if (success) {
       setIsEditingUsername(false);
       setError("");
     } else {
-      setError("Ce username est déjà pris");
+      setError("Failed to update display name");
     }
   };
 
   const handleSaveBio = async () => {
-    await updateBio(newBio.trim());
-    setIsEditingBio(false);
+    const success = await updateBio(newBio.trim());
+    if (success) {
+      setIsEditingBio(false);
+    }
   };
 
-  // Get listings
-  const currentListings = mockListings.filter(
-    (l) => l.sellerId === currentUser.walletAddress && l.status === "active"
-  );
-  const formerListings = mockListings.filter(
-    (l) => l.sellerId === currentUser.walletAddress && l.status === "sold"
-  );
-  const favoriteListings = mockListings.filter((l) =>
-    favorites.has(l.id)
-  );
+  const handleSavePrice = async () => {
+    const priceSui = parseFloat(newPrice);
+    if (isNaN(priceSui) || priceSui < 0) {
+      setError("Please enter a valid price");
+      return;
+    }
+    const priceMist = Math.round(priceSui * 1_000_000_000);
+    if (priceMist === 0) {
+      // Contract rejects 0 — default is already 0 (free), so nothing to do
+      setIsEditingPrice(false);
+      setError("");
+      return;
+    }
+    const success = await setSubscriptionPrice(priceMist);
+    if (success) {
+      setIsEditingPrice(false);
+      setError("");
+    } else {
+      setError("Failed to update subscription price");
+    }
+  };
 
-  // Update stats with actual current listings count
-  stats.currentListings = currentListings.length;
+  // Filter listings by status
+  const currentListings = myListings.filter((l) => l.isActive);
+  const formerListings = myListings.filter((l) => !l.isActive);
+  const favoriteListings = allListings.filter((l) => favorites.has(l.objectId));
 
-  // Username ellipsis logic (max 20 chars)
+  // Display name logic
+  const showName = displayName || `${walletAddress.slice(0, 4)}...${walletAddress.slice(-3)}`;
   const MAX_USERNAME_LENGTH = 20;
-  const displayUsername = currentUser.username || `${currentUser.walletAddress.slice(0, 4)}...${currentUser.walletAddress.slice(-3)}`;
-  const shouldTruncateUsername = displayUsername.length > MAX_USERNAME_LENGTH;
+  const shouldTruncateUsername = showName.length > MAX_USERNAME_LENGTH;
   const truncatedUsername = shouldTruncateUsername && !showFullUsername
-    ? `${displayUsername.slice(0, 8)}...${displayUsername.slice(-8)}`
-    : displayUsername;
+    ? `${showName.slice(0, 8)}...${showName.slice(-8)}`
+    : showName;
+  const initials = (displayName || walletAddress).slice(0, 2).toUpperCase();
   const centeredColumnWidth = { width: "min(40rem, 60vw)" };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen">
       <main className="py-[3vh] px-[2vw]">
-        {/* Titre et SearchBar centrés */}
+        {/* Header */}
         <div className="flex flex-col items-center gap-[2vh]" style={{ marginBottom: 'min(3rem, 5vh)' }}>
           <h1 className="text-white font-semibold" style={{ fontSize: 'clamp(1.5rem, 4vw, 3rem)' }}>
             Art-X
           </h1>
 
           <div style={centeredColumnWidth}>
-            <SearchBar onSearch={handleSearch} />
+            <SearchBar />
           </div>
         </div>
 
-        <div className="w-full">
-          {/* Header */}
-          <div className="mx-auto mb-6 sm:mb-8 pb-6 sm:pb-8 border-b space-y-4" style={centeredColumnWidth}>
-            <div className="flex flex-col items-center gap-4 sm:gap-6 text-center">
+        {/* Profile Card */}
+        <div
+          className="mx-auto rounded-2xl border border-white/10 bg-black/40 backdrop-blur-md shadow-[0_0_40px_rgba(0,0,0,0.3)] overflow-hidden"
+          style={centeredColumnWidth}
+        >
+          {/* Profile header inside card */}
+          <div className="p-6 sm:p-8 space-y-5">
+            <div className="flex flex-col items-center gap-4 text-center">
               {/* Avatar */}
-              <Avatar className="h-20 w-20 sm:h-32 sm:w-32 shrink-0">
-                <AvatarFallback className="text-2xl sm:text-4xl">
-                  {currentUser.username.slice(0, 2).toUpperCase() || "??"}
+              <Avatar className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 ring-2 ring-white/10">
+                <AvatarFallback className="text-2xl sm:text-3xl bg-white/5 text-white">
+                  {initials}
                 </AvatarFallback>
               </Avatar>
 
-              {/* Username, Address, and Stats */}
-              <div className="w-full min-w-0">
-                <div className="flex flex-col items-center gap-4">
-                  {/* Left: Username and Address */}
-                  <div className="w-full min-w-0">
-                    {isEditingUsername ? (
-                      <div className="space-y-2">
-                        <Input
-                          value={newUsername}
-                          onChange={(e) => {
-                            setNewUsername(e.target.value);
-                            setError("");
-                          }}
-                          placeholder="Nouveau username"
-                          className="w-full"
-                        />
-                        <div className="flex gap-2">
-                          <Button onClick={handleSaveUsername} size="sm">Sauvegarder</Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => {
-                              setIsEditingUsername(false);
-                              setNewUsername(currentUser.username);
-                              setError("");
-                            }}
-                          >
-                            Annuler
-                          </Button>
-                        </div>
-                        {error && <p className="text-sm text-red-500">{error}</p>}
-                      </div>
+              {/* Name & Address */}
+              <div className="w-full min-w-0 space-y-1">
+                {isEditingUsername ? (
+                  <div className="space-y-2">
+                    <Input
+                      value={newUsername}
+                      onChange={(e) => {
+                        setNewUsername(e.target.value);
+                        setError("");
+                      }}
+                      placeholder="New display name"
+                      className="w-full bg-white/5 border-white/10"
+                    />
+                    <div className="flex gap-2 justify-center">
+                      <Button onClick={handleSaveUsername} size="sm">Save</Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setIsEditingUsername(false);
+                          setNewUsername(displayName);
+                          setError("");
+                        }}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                    {error && <p className="text-sm text-red-400">{error}</p>}
+                  </div>
+                ) : (
+                  <h1 className="text-xl sm:text-2xl font-bold text-white break-words">
+                    {shouldTruncateUsername ? (
+                      <>
+                        {truncatedUsername.split('...')[0]}
+                        <button
+                          onClick={() => setShowFullUsername(!showFullUsername)}
+                          className="text-white/40 hover:text-white/70 transition-colors"
+                          title={showFullUsername ? "Collapse" : "Show full name"}
+                        >
+                          ...
+                        </button>
+                        {truncatedUsername.split('...')[1]}
+                      </>
                     ) : (
-                      <h1 className="text-2xl sm:text-3xl font-bold break-words">
-                        {shouldTruncateUsername ? (
-                          <>
-                            {truncatedUsername.split('...')[0]}
-                            <button
-                              onClick={() => setShowFullUsername(!showFullUsername)}
-                              className="text-muted-foreground hover:text-foreground transition-colors"
-                              title={showFullUsername ? "Réduire" : "Voir le nom complet"}
-                            >
-                              ...
-                            </button>
-                            {truncatedUsername.split('...')[1]}
-                          </>
-                        ) : (
-                          displayUsername
-                        )}
-                      </h1>
+                      showName
                     )}
-                    <p className="text-xs sm:text-sm text-muted-foreground font-mono mt-1 break-all">
-                      {currentUser.walletAddress}
-                    </p>
-
-                    {/* Stats on mobile */}
-                    <div className="flex gap-6 mt-4 sm:hidden">
-                      <div className="text-center">
-                        <p className="font-bold text-lg">{stats.followers}</p>
-                        <p className="text-xs text-muted-foreground">Followers</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-bold text-lg">{stats.following}</p>
-                        <p className="text-xs text-muted-foreground">Following</p>
-                      </div>
-                      <div className="text-center">
-                        <p className="font-bold text-lg">{stats.currentListings}</p>
-                        <p className="text-xs text-muted-foreground">Listings</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Center: Stats (desktop only) */}
-                  <div className="hidden sm:flex gap-6 shrink-0 justify-center">
-                    <div className="text-center">
-                      <p className="font-bold text-xl">{stats.followers}</p>
-                      <p className="text-sm text-muted-foreground">Followers</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-bold text-xl">{stats.following}</p>
-                      <p className="text-sm text-muted-foreground">Following</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="font-bold text-xl">{stats.currentListings}</p>
-                      <p className="text-sm text-muted-foreground">Listings</p>
-                    </div>
-                  </div>
-
-                  {/* Right: Edit buttons */}
-                  <div className="flex flex-col gap-8 shrink-0">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditingUsername(true)}
-                      className="w-full sm:w-auto whitespace-nowrap"
-                    >
-                      Edit username
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setIsEditingBio(true)}
-                      className="w-full sm:w-auto whitespace-nowrap"
-                    >
-                      Edit description
-                    </Button>
-                  </div>
-                </div>
+                  </h1>
+                )}
+                <p className="text-[11px] sm:text-xs text-white/40 font-mono break-all">
+                  {walletAddress}
+                </p>
               </div>
             </div>
 
-            {/* Bio section */}
+            {/* Stats row */}
+            <div className="flex justify-center gap-8">
+              <div className="text-center">
+                <p className="font-bold text-lg text-white">{subscriberCount}</p>
+                <p className="text-[11px] text-white/40">Subscribers</p>
+              </div>
+              <div className="w-px h-10 bg-white/10" />
+              <div className="text-center">
+                <p className="font-bold text-lg text-white">{subscriptionCount}</p>
+                <p className="text-[11px] text-white/40">Subscriptions</p>
+              </div>
+              <div className="w-px h-10 bg-white/10" />
+              <div className="text-center">
+                <p className="font-bold text-lg text-white">{listingCount}</p>
+                <p className="text-[11px] text-white/40">Listings</p>
+              </div>
+            </div>
+
+            {/* Bio */}
             {isEditingBio ? (
               <div className="space-y-2">
                 <Textarea
                   value={newBio}
                   onChange={(e) => setNewBio(e.target.value)}
-                  placeholder="Écrivez votre bio..."
+                  placeholder="Write your bio..."
                   rows={3}
-                  className="w-full"
+                  className="w-full bg-white/5 border-white/10"
                 />
-                <div className="flex gap-2">
-                  <Button onClick={handleSaveBio} size="sm">Sauvegarder</Button>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={handleSaveBio} size="sm">Save</Button>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => {
                       setIsEditingBio(false);
-                      setNewBio(currentUser.bio || "");
+                      setNewBio(bio);
                     }}
                   >
-                    Annuler
+                    Cancel
                   </Button>
                 </div>
               </div>
             ) : (
-              currentUser.bio && (
-                <p className="text-muted-foreground leading-relaxed">
-                  {currentUser.bio}
+              bio && (
+                <p className="text-sm text-white/60 leading-relaxed text-center">
+                  {bio}
                 </p>
               )
             )}
+
+            {/* Subscription price edit */}
+            {isEditingPrice && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-white/70">Subscription price (SUI)</label>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={newPrice}
+                  onChange={(e) => {
+                    setNewPrice(e.target.value);
+                    setError("");
+                  }}
+                  placeholder="0.00 (free)"
+                  className="bg-white/5 border-white/10"
+                />
+                <p className="text-xs text-white/30">Set to 0 for free subscriptions</p>
+                <div className="flex gap-2 justify-center">
+                  <Button onClick={handleSavePrice} size="sm">Save</Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsEditingPrice(false);
+                      setError("");
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+                {error && <p className="text-sm text-red-400">{error}</p>}
+              </div>
+            )}
+
+            {/* Action buttons */}
+            <div className="flex flex-wrap justify-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNewUsername(displayName);
+                  setIsEditingUsername(true);
+                }}
+                className="border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs"
+              >
+                Edit name
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNewBio(bio);
+                  setIsEditingBio(true);
+                }}
+                className="border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs"
+              >
+                Edit bio
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setNewPrice(subscriptionPrice > 0 ? (subscriptionPrice / 1_000_000_000).toString() : "");
+                  setIsEditingPrice(true);
+                  setError("");
+                }}
+                className="border-white/10 bg-white/5 hover:bg-white/10 text-white/70 hover:text-white text-xs"
+              >
+                {subscriptionPrice > 0
+                  ? `Sub: ${(subscriptionPrice / 1_000_000_000)} SUI`
+                  : "Set sub price"}
+              </Button>
+            </div>
           </div>
 
-      {/* Tabs - IMPERATIVEMENT alignés avec search bar et titre */}
-      <Tabs defaultValue="former" className="w-full flex flex-col items-center">
-        <TabsList className="grid grid-cols-3 mx-auto" style={centeredColumnWidth}>
-          <TabsTrigger value="current" className="w-full text-center justify-center text-xs sm:text-sm px-2">Current listing ({currentListings.length})</TabsTrigger>
-          <TabsTrigger value="former" className="w-full text-center justify-center text-xs sm:text-sm px-2">Former listing ({formerListings.length})</TabsTrigger>
-          <TabsTrigger value="favorites" className="w-full text-center justify-center text-xs sm:text-sm px-2">Favourites ({favoriteListings.length})</TabsTrigger>
-        </TabsList>
+          {/* Tabs - inside the card */}
+          <div className="border-t border-white/10">
+            <Tabs defaultValue="current" className="w-full">
+              <TabsList className="grid grid-cols-3 w-full bg-transparent rounded-none border-b border-white/5 h-11">
+                <TabsTrigger
+                  value="current"
+                  className="text-xs sm:text-sm text-white/50 data-[state=active]:text-white data-[state=active]:bg-white/5 rounded-none"
+                >
+                  Current ({currentListings.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="former"
+                  className="text-xs sm:text-sm text-white/50 data-[state=active]:text-white data-[state=active]:bg-white/5 rounded-none"
+                >
+                  Former ({formerListings.length})
+                </TabsTrigger>
+                <TabsTrigger
+                  value="favorites"
+                  className="text-xs sm:text-sm text-white/50 data-[state=active]:text-white data-[state=active]:bg-white/5 rounded-none"
+                >
+                  Favs ({favoriteListings.length})
+                </TabsTrigger>
+              </TabsList>
 
-        <TabsContent value="favorites" className="mt-6">
-          <NFTGrid
-            listings={favoriteListings}
-            emptyMessage="No favorite listings"
-          />
-        </TabsContent>
+              <div className="p-4 sm:p-6">
+                <TabsContent value="current" className="mt-0">
+                  {listingsLoading ? (
+                    <p className="text-center text-white/40 animate-pulse py-8">Loading...</p>
+                  ) : (
+                    <NFTGrid
+                      listings={currentListings}
+                      emptyMessage="No active listings"
+                    />
+                  )}
+                </TabsContent>
 
-        <TabsContent value="former" className="mt-6">
-          <NFTGrid
-            listings={formerListings}
-            emptyMessage="No former listings"
-          />
-        </TabsContent>
+                <TabsContent value="former" className="mt-0">
+                  <NFTGrid
+                    listings={formerListings}
+                    emptyMessage="No former listings"
+                  />
+                </TabsContent>
 
-        <TabsContent value="current" className="mt-6">
-          <NFTGrid
-            listings={currentListings}
-            emptyMessage="No active listings"
-          />
-        </TabsContent>
-      </Tabs>
+                <TabsContent value="favorites" className="mt-0">
+                  <NFTGrid
+                    listings={favoriteListings}
+                    emptyMessage="No favorite listings"
+                  />
+                </TabsContent>
+              </div>
+            </Tabs>
+          </div>
         </div>
       </main>
     </div>

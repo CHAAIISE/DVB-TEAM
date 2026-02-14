@@ -19,6 +19,8 @@ interface BalatroProps {
   spinEase?: number;
   isRotate?: boolean;
   mouseInteraction?: boolean;
+  /** Multiplier for animation time (1.0 = normal, 0.1 = 10x slower) */
+  timeScale?: number;
 }
 
 function hexToVec4(hex: string): [number, number, number, number] {
@@ -135,7 +137,8 @@ export default function Balatro({
   pixelFilter = 745.0,
   spinEase = 1.0,
   isRotate = false,
-  mouseInteraction = true
+  mouseInteraction = true,
+  timeScale = 1.0
 }: BalatroProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -215,7 +218,7 @@ export default function Balatro({
 
     function update(time: number) {
       animationFrameId = requestAnimationFrame(update);
-      program.uniforms.iTime.value = time * 0.001;
+      program.uniforms.iTime.value = time * 0.001 * timeScale;
       renderer.render({ scene: mesh });
     }
     animationFrameId = requestAnimationFrame(update);
@@ -258,7 +261,8 @@ export default function Balatro({
     spinEase,
     adjustedIsRotate,
     adjustedMouseInteraction,
-    isMobile
+    isMobile,
+    timeScale
   ]);
 
   return <div ref={containerRef} className="balatro-container" />;

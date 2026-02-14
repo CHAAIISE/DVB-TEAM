@@ -11,11 +11,10 @@ import { ConnectButton } from "@mysten/dapp-kit";
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const { currentUser } = useUser();
+  const { walletAddress, displayName } = useUser();
 
   const handleSearch = (query: string) => {
     console.log("Searching for:", query);
-    // TODO: Implement search functionality
   };
 
   // Ne pas afficher la navbar sur la landing page
@@ -70,7 +69,7 @@ export default function Navbar() {
           >
             <Avatar className="h-10 w-10 sm:h-full sm:w-full">
               <AvatarFallback className="bg-black text-white text-xs sm:text-base">
-                {currentUser?.username?.slice(0, 2).toUpperCase() || "??"}
+                {(displayName || walletAddress || "??").slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
           </Button>

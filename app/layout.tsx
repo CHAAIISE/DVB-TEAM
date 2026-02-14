@@ -2,7 +2,7 @@ import "@mysten/dapp-kit/dist/index.css";
 import "./globals.css";
 import { Providers } from "./providers";
 import Navbar from "./components/Navbar";
-import Balatro from "@/components/background/Balatro";
+import BalatroBackground from "@/components/background/BalatroBackground";
 
 export default function RootLayout({
   children,
@@ -18,15 +18,8 @@ export default function RootLayout({
         <title>Art-X - NFT Marketplace</title>
       </head>
       <body>
-        <Balatro
-          isRotate={false}
-          mouseInteraction={true}
-          pixelFilter={2000}
-          color1="#000000"
-          color2="#38bdf8"
-          color3="#2563eb"
-        />
         <Providers>
+          <BalatroBackground />
           <Navbar />
           {children}
         </Providers>

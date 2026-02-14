@@ -4,11 +4,17 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { FavoriteButton } from "./FavoriteButton";
-import { Listing } from "@/types";
+import { OnChainListing } from "@/lib/queries";
 import TiltedCard from "@/components/ui/TiltedCard";
 
 interface NFTCardProps {
-  listing: Listing;
+  listing: OnChainListing;
+}
+
+/** Convert MIST to SUI for display */
+function mistToSui(mist: number): string {
+  const sui = mist / 1_000_000_000;
+  return sui % 1 === 0 ? sui.toString() : sui.toFixed(2);
 }
 
 export function NFTCard({ listing }: NFTCardProps) {
@@ -16,16 +22,18 @@ export function NFTCard({ listing }: NFTCardProps) {
   const [isHovering, setIsHovering] = useState(false);
 
   const handleClick = () => {
-    router.push(`/listing/${listing.id}`);
+    router.push(`/listing/${listing.objectId}`);
   };
 
   const handleSellerClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    router.push(`/profile/${listing.sellerId}`);
+    router.push(`/profile/${listing.seller}`);
   };
 
-  // Obtenir les 2 premiers caractères (username ou wallet address)
-  const initials = (listing.seller.username || listing.seller.walletAddress).slice(0, 2).toUpperCase();
+  const initials = listing.seller.slice(2, 4).toUpperCase();
+  const imageUrl = listing.nftImageUrl || "/placeholder.svg";
+  const name = listing.nftName || listing.title;
+  const description = listing.nftDescription || listing.description;
 
   return (
     <Card
@@ -35,9 +43,9 @@ export function NFTCard({ listing }: NFTCardProps) {
       {/* Image avec effet TiltedCard */}
       <div className="relative aspect-square overflow-hidden bg-muted/50 backdrop-blur-sm">
         <TiltedCard
-          imageSrc={listing.nft.imageUrl}
-          altText={listing.nft.name}
-          captionText={listing.nft.name}
+          imageSrc={imageUrl}
+          altText={name}
+          captionText={name}
           containerHeight="100%"
           containerWidth="100%"
           imageHeight="85%"
@@ -54,7 +62,7 @@ export function NFTCard({ listing }: NFTCardProps) {
         <button
           onClick={handleSellerClick}
           className="absolute bottom-2 left-2 z-10 hover:scale-110 transition-transform bg-black/90 backdrop-blur-sm text-white rounded-full h-10 w-10 flex items-center justify-center text-xs font-bold border-2 border-white shadow-lg"
-          title={`Voir le profil de ${listing.seller.username || listing.seller.walletAddress}`}
+          title={`Voir le profil de ${listing.seller.slice(0, 8)}...`}
         >
           {initials}
         </button>
@@ -66,8 +74,8 @@ export function NFTCard({ listing }: NFTCardProps) {
         style={{ minHeight: '120px', maxHeight: '120px', display: 'flex', flexDirection: 'column' }}
       >
         <div className="flex items-center justify-between mb-2">
-          <p className="text-2xl font-bold">{listing.price} SUI</p>
-          <FavoriteButton listingId={listing.id} size="sm" />
+          <p className="text-2xl font-bold">{mistToSui(listing.price)} SUI</p>
+          <FavoriteButton listingId={listing.objectId} size="sm" />
         </div>
         <div
           className="flex-1 overflow-hidden"
@@ -82,7 +90,7 @@ export function NFTCard({ listing }: NFTCardProps) {
               lineHeight: '1.2em'
             }}
           >
-            {listing.nft.description}
+            {description}
           </p>
         </div>
       </CardContent>

@@ -4,7 +4,6 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { useCurrentAccount } from "@mysten/dapp-kit";
 import { useSession, signOut as nextAuthSignOut } from "next-auth/react";
 import { AuthState, AuthMethod, User } from '../types';
-import { mockUsers } from '../mock';
 
 interface AuthContextType {
   authState: AuthState;
@@ -27,17 +26,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Priority: wallet first, then OAuth
     if (currentAccount?.address) {
       // Wallet authentication
-      let user = mockUsers.find(u => u.walletAddress === currentAccount.address);
-
-      if (!user) {
-        // Create new user with wallet address as username
-        user = {
-          walletAddress: currentAccount.address,
-          username: currentAccount.address,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        };
-      }
+      const user: User = {
+        walletAddress: currentAccount.address,
+        username: currentAccount.address,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
 
       setAuthState({
         isAuthenticated: true,
