@@ -1,21 +1,28 @@
-import App from "./App";
+"use client";
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Home() {
+  const { authState } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!authState.isLoading) {
+      if (authState.isAuthenticated) {
+        router.push("/home");
+      } else {
+        router.push("/landing");
+      }
+    }
+  }, [authState.isLoading, authState.isAuthenticated, router]);
+
   return (
-    <div className="bg-slate-50 min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            Welcome to Counter App
-          </h1>
-          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            A beautiful and modern counter application built with Next.js, Tailwind CSS, and shadcn/ui components.
-          </p>
-        </div>
-        
-        <div className="flex justify-center">
-          <App />
-        </div>
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p className="text-muted-foreground">Redirection...</p>
       </div>
     </div>
   );

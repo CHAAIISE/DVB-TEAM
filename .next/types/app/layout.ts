@@ -1,4 +1,4 @@
-// File: /Users/noew/VSCode/SUI-PROJECTS/Bootcamps/Bootcamp26-02/DVB-TEAM/app/layout.tsx
+// File: /mnt/c/Users/arthu/Desktop/DEFI-Blockchain/HackatonSui/DVB-TEAM/app/layout.tsx
 import * as entry from '../../../app/layout.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
