@@ -3,7 +3,7 @@
 /// ═══════════════════════════════════════════════════════════════════════════
 ///
 /// Architecture :
-///   UserProfile  — objet possédé, métadonnées + prix abo + Table abonnés + Table abonnements
+///   UserProfile  — objet partagé (shared), métadonnées + prix abo + Table abonnés + Table abonnements
 ///   Listing      — NFT en vente (shared object, stocke le NFT via dynamic_object_field)
 ///
 ///   Chaque UserProfile stocke :
@@ -57,7 +57,7 @@ const ESubscriptionNotConfigured: u64 = 9;
 //  CORE DATA STRUCTURES
 // ══════════════════════════════════════════════════════════════════════════════
 
-/// Profil utilisateur — objet possédé par l'utilisateur.
+/// Profil utilisateur — objet partagé (shared object).
 ///   - `subscribers`   : Table<adresse_abonné → SubscriptionRecord> (qui me suit)
 ///   - `subscriptions` : Table<adresse_créateur → bool> (à qui je suis abonné)
 ///   - `favorites`     : Table<ID_listing → bool>
@@ -217,7 +217,8 @@ public entry fun create_profile(
 
     event::emit(ProfileCreated { profile_id, owner: sender, subscription_price: 0 });
 
-    transfer::transfer(profile, sender);
+    // Shared object so other users can interact (subscribe, etc.)
+    transfer::share_object(profile);
 }
 
 /// Met à jour le display_name.
@@ -270,7 +271,6 @@ public fun request_subscription(
     ctx: &TxContext,
 ): SubscriptionTicket {
     let subscriber = ctx.sender();
-    assert!(creator_profile.subscription_price > 0, ESubscriptionNotConfigured);
     assert!(subscriber != creator_profile.owner, ECannotSubscribeToSelf);
     assert!(!creator_profile.subscribers.contains(subscriber), EAlreadySubscribed);
 
@@ -318,8 +318,13 @@ public fun complete_subscription(
     subscriber_profile.subscriptions.add(creator, true);
     subscriber_profile.subscription_count = subscriber_profile.subscription_count + 1;
 
-    // Transfère le paiement au créateur
-    transfer::public_transfer(payment, creator);
+    // Transfère le paiement au créateur (si payant)
+    if (amount_due > 0) {
+        transfer::public_transfer(payment, creator);
+    } else {
+        // Free subscription — destroy the 0-value coin
+        payment.destroy_zero();
+    };
 
     // Émet le reçu à l'abonné
     let receipt = SubscriptionReceipt {
