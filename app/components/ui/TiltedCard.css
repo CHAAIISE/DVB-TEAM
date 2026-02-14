@@ -30,16 +30,19 @@
 .tilted-card-inner {
   position: relative;
   transform-style: preserve-3d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .tilted-card-img {
-  position: absolute;
-  top: 0;
-  left: 0;
+  position: relative;
   object-fit: cover;
   border-radius: 15px;
   will-change: transform;
   transform: translateZ(0);
+  display: block;
+  margin: auto;
 }
 
 .tilted-card-overlay {

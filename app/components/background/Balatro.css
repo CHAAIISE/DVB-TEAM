@@ -1,0 +1,23 @@
+.balatro-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.balatro-container canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* Performance optimization pour mobile */
+@media (max-width: 768px) {
+  .balatro-container {
+    filter: blur(2px); /* Légère réduction de qualité pour performances */
+  }
+}

@@ -48,8 +48,8 @@ export default function CreateListingPage() {
   };
 
   return (
-    <div className="container max-w-2xl py-8">
-      <div className="mb-6">
+    <div className="container max-w-2xl py-4 sm:py-8 px-4">
+      <div className="mb-4 sm:mb-6">
         <Button
           variant="ghost"
           onClick={() => router.back()}
@@ -58,7 +58,7 @@ export default function CreateListingPage() {
         </Button>
       </div>
 
-      <h1 className="text-3xl font-bold mb-8">Poster une annonce</h1>
+      <h1 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Poster une annonce</h1>
 
       <Card>
         <CardContent className="pt-6 space-y-6">
@@ -73,7 +73,7 @@ export default function CreateListingPage() {
                 Vous n'avez aucun NFT dans votre wallet
               </p>
             ) : (
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {userNFTs.map((nft) => (
                   <div
                     key={nft.id}

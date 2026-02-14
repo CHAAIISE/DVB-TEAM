@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { SuiClient } from '@mysten/sui/client';
 import { supabase } from '../../lib/supabase';
-import { resolveAddressToName } from '../../lib/suins';
 
 const PACKAGE_ID = process.env.NEXT_PUBLIC_PACKAGE_ID!;
 const SUI_NETWORK = process.env.NEXT_PUBLIC_SUI_NETWORK || 'testnet';
@@ -50,29 +49,21 @@ export async function POST(req: NextRequest) {
 
       try {
         switch (eventType) {
-          case 'ProfileCreated': {
-            // Résout le nom SUINS associé à l'adresse
-            const suinsNameCreated = await resolveAddressToName(data.owner);
+          case 'ProfileCreated':
             await supabase.from('user_profiles').upsert({
               id: data.profile_id,
               owner_address: data.owner,
-              suins_name: suinsNameCreated,
               created_at: new Date(Number(event.timestampMs)).toISOString()
             });
             break;
-          }
 
-          case 'ProfileUpdated': {
-            // Rafraîchit le SUINS au cas où il a changé
-            const suinsNameUpdated = await resolveAddressToName(data.owner);
+          case 'ProfileUpdated':
             await supabase.from('user_profiles').update({
               display_name: data.display_name,
               bio: data.bio,
-              suins_name: suinsNameUpdated,
               updated_at: new Date(Number(event.timestampMs)).toISOString()
             }).eq('id', data.profile_id);
             break;
-          }
 
           case 'PriceUpdated':
             await supabase.from('user_profiles').update({

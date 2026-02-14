@@ -19,11 +19,9 @@ export async function GET(req: NextRequest) {
     .range(from, to)
     .order(sortBy, { ascending: order === 'asc' });
 
-  // Recherche par nom, bio, suins_name ou adresse wallet
+  // Recherche par nom ou bio
   if (search) {
-    query = query.or(
-      `display_name.ilike.%${search}%,bio.ilike.%${search}%,suins_name.ilike.%${search}%,owner_address.ilike.%${search}%`
-    );
+    query = query.or(`display_name.ilike.%${search}%,bio.ilike.%${search}%`);
   }
 
   const { data, error, count } = await query;
