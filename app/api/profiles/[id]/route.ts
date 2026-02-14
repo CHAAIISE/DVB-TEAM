@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/app/lib/supabase';
+import { supabase } from '../../../lib/supabase';
 
 // GET /api/profiles/[id] - Récupère un profil spécifique
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const { data: profile, error } = await supabase
     .from('user_profiles')
     .select('*')
-    .eq('id', params.id)
+    .eq('id', id)
     .single();
 
   if (error) {
