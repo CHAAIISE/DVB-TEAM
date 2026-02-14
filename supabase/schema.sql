@@ -81,3 +81,7 @@ $$ language 'plpgsql';
 
 CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- SUINS: colonne pour stocker le nom SUINS associé à chaque profil
+ALTER TABLE user_profiles ADD COLUMN IF NOT EXISTS suins_name TEXT;
+CREATE INDEX IF NOT EXISTS idx_user_profiles_suins ON user_profiles(suins_name);

@@ -1,6 +1,17 @@
 {
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/indexer/route": "app/api/indexer/route.js",
+  "/api/listings/route": "app/api/listings/route.js",
+  "/api/profiles/[id]/route": "app/api/profiles/[id]/route.js",
+  "/api/profiles/route": "app/api/profiles/route.js",
+  "/api/subscriptions/route": "app/api/subscriptions/route.js",
+  "/api/suins/route": "app/api/suins/route.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/(auth)/landing/page": "app/(auth)/landing/page.js",
   "/page": "app/page.js",
   "/(marketplace)/home/page": "app/(marketplace)/home/page.js",
-  "/(marketplace)/profile/[wallet]/page": "app/(marketplace)/profile/[wallet]/page.js"
+  "/(marketplace)/profile/[wallet]/page": "app/(marketplace)/profile/[wallet]/page.js",
+  "/(marketplace)/listing/[id]/page": "app/(marketplace)/listing/[id]/page.js",
+  "/(marketplace)/post/new/page": "app/(marketplace)/post/new/page.js",
+  "/(marketplace)/profile/me/page": "app/(marketplace)/profile/me/page.js"
 }

@@ -1,4 +1,4 @@
-// File: /mnt/c/Users/arthu/Desktop/DEFI-Blockchain/HackatonSui/DVB-TEAM/app/page.tsx
+// File: /Users/noew/VSCode/SUI-PROJECTS/Bootcamps/Bootcamp26-02/DVB-TEAM/app/page.tsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

@@ -112,6 +112,9 @@ export default function MyProfilePage() {
                 </Button>
               </div>
             )}
+            {currentUser.suinsName && (
+              <p className="text-sm text-blue-500 font-medium mt-1">🏷️ {currentUser.suinsName}</p>
+            )}
             <p className="text-sm text-muted-foreground font-mono mt-1">
               {currentUser.walletAddress}
             </p>

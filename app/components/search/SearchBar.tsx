@@ -1,11 +1,17 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Search } from "lucide-react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Search, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { mockUsers } from "@/mock";
 import { useRouter } from "next/navigation";
+
+interface SearchResult {
+  walletAddress: string;
+  username: string;
+  avatar?: string;
+  suinsName?: string;
+}
 
 interface SearchBarProps {
   onSearch?: (query: string) => void;
@@ -14,37 +20,84 @@ interface SearchBarProps {
 export function SearchBar({ onSearch }: SearchBarProps) {
   const [query, setQuery] = useState("");
   const [showResults, setShowResults] = useState(false);
-  const [results, setResults] = useState<typeof mockUsers>([]);
-  const [displayCount, setDisplayCount] = useState(5); // 5 au départ, 15 après Enter
-  const [isFullSearch, setIsFullSearch] = useState(false); // true après avoir appuyé sur Enter
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [displayCount, setDisplayCount] = useState(5);
+  const [isFullSearch, setIsFullSearch] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
-  // Recherche en temps réel (5 résultats)
-  useEffect(() => {
-    if (query.trim()) {
-      const filtered = mockUsers
-        .filter(
-          (user) =>
-            user.username.toLowerCase().includes(query.toLowerCase()) ||
-            user.walletAddress.toLowerCase().includes(query.toLowerCase())
-        )
-        .sort((a, b) => a.username.localeCompare(b.username));
+  // Fonction de recherche avec support SUINS
+  const searchUsers = useCallback(async (searchQuery: string, fullSearch: boolean) => {
+    if (!searchQuery.trim()) {
+      setShowResults(false);
+      setResults([]);
+      setIsLoading(false);
+      return;
+    }
 
-      setResults(filtered);
-      setShowResults(true);
+    setIsLoading(true);
 
-      // Si pas en mode recherche complète, montrer seulement 5 résultats
-      if (!isFullSearch) {
-        setDisplayCount(5);
+    const isSuins = searchQuery.endsWith(".sui") ||
+      (!searchQuery.startsWith("0x") && /^[a-zA-Z0-9-]+$/.test(searchQuery) && searchQuery.length > 2);
+
+    try {
+      let profileResults: SearchResult[] = [];
+
+      if (isSuins) {
+        // Résolution SUINS via API puis recherche profil
+        const suinsRes = await fetch(`/api/suins?query=${encodeURIComponent(searchQuery)}`);
+        const suinsData = await suinsRes.json();
+
+        if (suinsData.found && suinsData.address) {
+          const profileRes = await fetch(`/api/profiles?search=${encodeURIComponent(suinsData.address)}`);
+          const profileData = await profileRes.json();
+          profileResults = (profileData.profiles || []).map((p: any) => ({
+            walletAddress: p.owner_address,
+            username: p.display_name || p.suins_name || p.owner_address,
+            avatar: p.avatar_url,
+            suinsName: p.suins_name || suinsData.name,
+          }));
+        }
       }
-    } else {
+
+      // Recherche classique en parallèle (par nom, adresse, suins_name)
+      if (profileResults.length === 0) {
+        const res = await fetch(`/api/profiles?search=${encodeURIComponent(searchQuery)}`);
+        const data = await res.json();
+        profileResults = (data.profiles || []).map((p: any) => ({
+          walletAddress: p.owner_address,
+          username: p.display_name || p.suins_name || p.owner_address,
+          avatar: p.avatar_url,
+          suinsName: p.suins_name,
+        }));
+      }
+
+      setResults(profileResults);
+      setShowResults(true);
+      if (!fullSearch) setDisplayCount(5);
+    } catch {
+      setResults([]);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // Debounce de 300ms sur la recherche
+  useEffect(() => {
+    if (!query.trim()) {
       setShowResults(false);
       setResults([]);
       setIsFullSearch(false);
       setDisplayCount(5);
+      return;
     }
-  }, [query, isFullSearch]);
+
+    const timer = setTimeout(() => {
+      searchUsers(query, isFullSearch);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, isFullSearch, searchUsers]);
 
   // Clic en dehors pour fermer
   useEffect(() => {
@@ -88,12 +141,15 @@ export function SearchBar({ onSearch }: SearchBarProps) {
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
           type="text"
-          placeholder="Rechercher par username ou adresse wallet..."
+          placeholder="Rechercher par username, adresse wallet ou SUINS..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => query.trim() && setShowResults(true)}
           className="pl-10 h-12 text-base"
         />
+        {isLoading && (
+          <Loader2 className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" />
+        )}
       </form>
 
       {/* Résultats de recherche */}
@@ -116,6 +172,9 @@ export function SearchBar({ onSearch }: SearchBarProps) {
                   )}
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-sm truncate">{user.username}</p>
+                    {user.suinsName && (
+                      <p className="text-xs text-blue-500 truncate">🏷️ {user.suinsName}</p>
+                    )}
                     <p className="text-xs text-gray-500 truncate font-mono">
                       {user.walletAddress}
                     </p>

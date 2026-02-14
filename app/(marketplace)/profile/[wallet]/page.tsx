@@ -53,6 +53,9 @@ export default function UserProfilePage() {
         <div className="flex-1 space-y-4">
           <div>
             <h1 className="text-3xl font-bold">{user.username}</h1>
+            {user.suinsName && (
+              <p className="text-sm text-blue-500 font-medium">🏷️ {user.suinsName}</p>
+            )}
             <p className="text-sm text-muted-foreground font-mono">
               {user.walletAddress.slice(0, 10)}...{user.walletAddress.slice(-8)}
             </p>

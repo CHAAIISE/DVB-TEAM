@@ -4,6 +4,7 @@ export interface User {
   displayName?: string;
   bio?: string;
   avatar?: string;
+  suinsName?: string; // Nom SUINS associé (ex: alice.sui)
   subscriptionPrice?: number; // Prix abonnement en SUI (optionnel)
   createdAt: Date;
   updatedAt: Date;
