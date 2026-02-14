@@ -1,0 +1,12 @@
+# Cles privees et config
+.env
+
+# Images locales
+images/
+
+# Resultats d'upload
+walrus-uploads.json
+
+# Build
+dist/
+node_modules/
