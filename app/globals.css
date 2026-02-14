@@ -55,4 +55,50 @@
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
   }
+
+  /* Assurer que le body permet le fond fixed */
+  html, body {
+    position: relative;
+    overflow-x: hidden; /* Éviter scroll horizontal sur mobile */
+  }
+
+  body {
+    min-height: 100vh;
+    min-height: 100dvh; /* Dynamic viewport height pour mobile */
+  }
+}
+
+/* Responsive optimizations */
+@layer utilities {
+  /* Container padding responsive */
+  .container {
+    @apply px-4 sm:px-6 md:px-8 lg:px-16;
+  }
+
+  /* Touch-friendly targets (minimum 44px pour iOS) */
+  .touch-target {
+    @apply min-h-11 min-w-11;
+  }
+}
+
+/* Mobile-specific optimizations */
+@media (max-width: 768px) {
+  /* Réduire animations/transitions pour performances */
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  /* Empêcher le double-tap zoom sur iOS */
+  * {
+    touch-action: manipulation;
+  }
+}
+
+/* Améliorer la lisibilité du contenu sur fond animé */
+@layer components {
+  .content-card {
+    @apply bg-black/80 backdrop-blur-sm;
+  }
 }

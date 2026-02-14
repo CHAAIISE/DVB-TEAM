@@ -1,115 +1,81 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
+import { Plus, Home } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { SearchBar } from "@/components/search/SearchBar";
+import { useUser } from "@/contexts/UserContext";
 import { ConnectButton } from "@mysten/dapp-kit";
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuLink,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-  navigationMenuTriggerStyle,
-} from "./ui/navigation-menu";
-
-const components: { title: string; href: string; description: string }[] = [
-  {
-    title: "Counter",
-    href: "/counter",
-    description: "View and interact with the counter component.",
-  },
-  {
-    title: "Create Counter",
-    href: "/create",
-    description: "Create a new counter instance on the blockchain.",
-  },
-  {
-    title: "About",
-    href: "/about",
-    description: "Learn more about this counter application.",
-  },
-];
 
 export default function Navbar() {
-  return (
-    <NavigationMenu className="max-w-full justify-between p-4 bg-white border-b border-gray-200">
-      <NavigationMenuList className="flex w-full justify-between items-center">
-        <div className="flex items-center space-x-6">
-          <NavigationMenuItem>
-            <NavigationMenuLink asChild>
-              <Link href="/" className="flex items-center space-x-2 font-semibold text-lg text-gray-900">
-                Counter App
-              </Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
-          
-          <NavigationMenuItem>
-            <NavigationMenuTrigger className="text-gray-900">Features</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <ul className="grid gap-3 p-6 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr] bg-white">
-                <li className="row-span-3">
-                  <NavigationMenuLink asChild>
-                    <Link
-                      className="flex h-full w-full select-none flex-col justify-end rounded-md bg-gradient-to-b from-slate-50 to-slate-100 p-6 no-underline outline-none focus:shadow-md"
-                      href="/"
-                    >
-                      <div className="mb-2 mt-4 text-lg font-medium text-gray-900">
-                        Counter App
-                      </div>
-                      <p className="text-sm leading-tight text-slate-600">
-                        A beautiful counter application built with Next.js and Tailwind CSS.
-                      </p>
-                    </Link>
-                  </NavigationMenuLink>
-                </li>
-                {components.map((component) => (
-                  <ListItem
-                    key={component.title}
-                    title={component.title}
-                    href={component.href}
-                  >
-                    {component.description}
-                  </ListItem>
-                ))}
-              </ul>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
+  const router = useRouter();
+  const pathname = usePathname();
+  const { currentUser } = useUser();
 
-          <NavigationMenuItem>
-            <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-              <Link href="/" className="text-gray-900">Home</Link>
-            </NavigationMenuLink>
-          </NavigationMenuItem>
+  const handleSearch = (query: string) => {
+    console.log("Searching for:", query);
+    // TODO: Implement search functionality
+  };
+
+  // Ne pas afficher la navbar sur la landing page
+  if (pathname === "/landing" || pathname === "/") {
+    return null;
+  }
+
+  return (
+    <div className="sticky top-0 z-50 backdrop-blur-md bg-black/20">
+      <div className="grid grid-cols-3 items-center py-2 px-4 sm:py-[1vh] sm:px-[2vw] gap-2 sm:gap-[2vw]">
+        {/* Gauche: Icône + et Wallet */}
+        <div className="flex items-center gap-2 sm:gap-[1vw] shrink-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-gray-700 hover:bg-gray-600 text-white h-10 w-10 sm:h-auto sm:w-auto"
+            style={{ width: 'min(2.5rem, 5vw)', height: 'min(2.5rem, 5vw)' }}
+            onClick={() => router.push("/post/new")}
+            title="Créer une annonce"
+          >
+            <Plus className="w-[60%] h-[60%]" strokeWidth={2.5} />
+          </Button>
+
+          <div className="text-xs sm:text-sm" style={{ fontSize: 'clamp(0.75rem, 1.2vw, 0.875rem)' }}>
+            <ConnectButton />
+          </div>
         </div>
 
-        <NavigationMenuItem className="flex ml-auto">
-          <ConnectButton />
-        </NavigationMenuItem>
-      </NavigationMenuList>
-    </NavigationMenu>
+        {/* Centre: Home button */}
+        <div className="flex justify-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full bg-gray-700 hover:bg-gray-600 text-white h-10 w-10 sm:h-auto sm:w-auto"
+            style={{ width: 'min(2.5rem, 5vw)', height: 'min(2.5rem, 5vw)' }}
+            onClick={() => router.push("/home")}
+            title="Retour à l'accueil"
+          >
+            <Home className="w-[60%] h-[60%]" strokeWidth={2.5} />
+          </Button>
+        </div>
+
+        {/* Droite: Avatar */}
+        <div className="flex justify-end">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="shrink-0 rounded-full bg-black hover:bg-black/80 p-0 h-10 w-10 sm:h-auto sm:w-auto"
+            style={{ width: 'min(2.5rem, 5vw)', height: 'min(2.5rem, 5vw)' }}
+            onClick={() => router.push("/profile/me")}
+            title="Mon profil"
+          >
+            <Avatar className="h-10 w-10 sm:h-full sm:w-full">
+              <AvatarFallback className="bg-black text-white text-xs sm:text-base">
+                {currentUser?.username?.slice(0, 2).toUpperCase() || "??"}
+              </AvatarFallback>
+            </Avatar>
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
-
-const ListItem = React.forwardRef<
-  React.ElementRef<"a">,
-  React.ComponentPropsWithoutRef<"a">
->(({ className, title, children, ...props }, ref) => {
-  return (
-    <li>
-      <NavigationMenuLink asChild>
-        <a
-          ref={ref}
-          className={`block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors hover:bg-slate-100 hover:text-slate-900 focus:bg-slate-100 focus:text-slate-900 ${className}`}
-          {...props}
-        >
-          <div className="text-sm font-medium leading-none text-gray-900">{title}</div>
-          <p className="line-clamp-2 text-sm leading-snug text-slate-600">
-            {children}
-          </p>
-        </a>
-      </NavigationMenuLink>
-    </li>
-  );
-});
-ListItem.displayName = "ListItem";
