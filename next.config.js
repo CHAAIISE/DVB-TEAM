@@ -1,5 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  eslint: {
+    // ESLint is run separately in CI; skip during `next build` to avoid config issues
+    ignoreDuringBuilds: true,
+  },
+  typescript: {
+    // Type-checking is done separately; don't block Vercel deploys
+    ignoreBuildErrors: false,
+  },
   turbopack: {
     rules: {
       "*.svg": {
@@ -17,6 +25,18 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'i.pravatar.cc',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.walrus.xyz',
+      },
+      {
+        protocol: 'https',
+        hostname: 'aggregator.walrus-testnet.walrus.space',
+      },
+      {
+        protocol: 'https',
+        hostname: '**.supabase.co',
       },
     ],
   },
