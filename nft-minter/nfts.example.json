@@ -1,0 +1,27 @@
+[
+  {
+    "name": "Cosmic Horizon",
+    "description": "A stunning view of distant galaxies merging in deep space",
+    "image_url": "WALRUS_URL_ICI"
+  },
+  {
+    "name": "Neon Tiger",
+    "description": "Cyberpunk tiger illuminated by neon city lights",
+    "image_url": "WALRUS_URL_ICI"
+  },
+  {
+    "name": "Crystal Cave",
+    "description": "Underground cavern filled with glowing amethyst crystals",
+    "image_url": "WALRUS_URL_ICI"
+  },
+  {
+    "name": "Ocean Spirit",
+    "description": "Mythical sea creature emerging from turquoise waters",
+    "image_url": "WALRUS_URL_ICI"
+  },
+  {
+    "name": "Digital Samurai",
+    "description": "Futuristic warrior wielding a blade of pure data",
+    "image_url": "WALRUS_URL_ICI"
+  }
+]
