@@ -10,6 +10,28 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/page.js"
+    ],
+    "/(marketplace)/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(marketplace)/layout.js"
+    ],
+    "/(marketplace)/home/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(marketplace)/home/page.css",
+      "static/chunks/app/(marketplace)/home/page.js"
+    ],
+    "/api/auth/[...nextauth]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/auth/[...nextauth]/route.js"
+    ],
+    "/(marketplace)/profile/[wallet]/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/(marketplace)/profile/[wallet]/page.css",
+      "static/chunks/app/(marketplace)/profile/[wallet]/page.js"
     ]
   }
 }

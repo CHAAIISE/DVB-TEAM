@@ -1,3 +1,6 @@
 {
-  "/page": "app/page.js"
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/page": "app/page.js",
+  "/(marketplace)/home/page": "app/(marketplace)/home/page.js",
+  "/(marketplace)/profile/[wallet]/page": "app/(marketplace)/profile/[wallet]/page.js"
 }
