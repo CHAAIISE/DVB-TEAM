@@ -3,6 +3,20 @@ import "./globals.css";
 import { Providers } from "./providers";
 import Navbar from "./components/Navbar";
 import BalatroBackground from "@/components/background/BalatroBackground";
+import type { Metadata, Viewport } from "next";
+
+export const metadata: Metadata = {
+  title: "Art-X - NFT Marketplace",
+  description: "Decentralized NFT marketplace & creator subscription platform on Sui",
+  icons: { icon: "/favicon.svg" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
 
 export default function RootLayout({
   children,
@@ -11,12 +25,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <head>
-        <meta charSet="UTF-8" />
-        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-        <title>Art-X - NFT Marketplace</title>
-      </head>
       <body>
         <Providers>
           <BalatroBackground />
